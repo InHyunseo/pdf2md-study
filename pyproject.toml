@@ -1,5 +1,5 @@
 [project]
-name = "pdf4study"
+name = "pdf2md-study"
 version = "0.1.0"
 description = "Convert papers and lecture slides (PDF) into study-ready Markdown for LLMs — equations and code kept as images, logos and references stripped."
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pdf4study = "pdf4study:main"
+pdf2md-study = "pdf2md_study.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.12.22,<0.13.0"]
