@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/InHyunseo/pdf2md-study/actions/workflows/ci.yml/badge.svg)](https://github.com/InHyunseo/pdf2md-study/actions/workflows/ci.yml)
 
-English | [한국어](README.ko.md)
+English | [한국어](https://github.com/InHyunseo/pdf2md-study/blob/main/README.ko.md)
 
 Convert papers and lecture slides (PDF) into study-ready Markdown for LLMs — equations and code kept as images, logos and references stripped.
 
@@ -36,8 +36,8 @@ pdf2md-study paper.pdf
 
 `paper.md` and `paper_artifacts/` appear next to the PDF.
 
-- [Quickstart](docs/quickstart.md): step by step on Ubuntu, WSL2, macOS, and Windows
-- [Usage](docs/usage.md): options, output, and tips for sending to an LLM
+- [Quickstart](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/quickstart.md): step by step on Ubuntu, WSL2, macOS, and Windows
+- [Usage](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/usage.md): options, output, and tips for sending to an LLM
 
 ## Development
 
@@ -53,4 +53,4 @@ Pull requests run lint and tests on Ubuntu, Windows, and macOS.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/InHyunseo/pdf2md-study/blob/main/LICENSE)

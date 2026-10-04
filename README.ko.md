@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/InHyunseo/pdf2md-study/actions/workflows/ci.yml/badge.svg)](https://github.com/InHyunseo/pdf2md-study/actions/workflows/ci.yml)
 
-[English](README.md) | 한국어
+[English](https://github.com/InHyunseo/pdf2md-study/blob/main/README.md) | 한국어
 
 논문과 강의자료 PDF를 LLM 공부용 마크다운으로 바꾼다. 수식과 코드는 그림으로 남기고, 로고와 참고문헌은 지운다.
 
@@ -36,8 +36,8 @@ pdf2md-study paper.pdf
 
 PDF 옆에 `paper.md`와 `paper_artifacts/`가 생긴다.
 
-- [빠른 시작](docs/quickstart.ko.md): Ubuntu, WSL2, macOS, Windows 단계별 설치
-- [사용법](docs/usage.ko.md): 옵션, 결과물, LLM에 보낼 때 팁
+- [빠른 시작](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/quickstart.ko.md): Ubuntu, WSL2, macOS, Windows 단계별 설치
+- [사용법](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/usage.ko.md): 옵션, 결과물, LLM에 보낼 때 팁
 
 ## 개발
 
@@ -53,4 +53,4 @@ PR마다 Ubuntu, Windows, macOS에서 lint와 테스트가 돈다.
 
 ## 라이선스
 
-[MIT](LICENSE)
+[MIT](https://github.com/InHyunseo/pdf2md-study/blob/main/LICENSE)
