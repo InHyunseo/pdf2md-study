@@ -10,48 +10,34 @@
 
 ## 왜 필요한가
 
-PDF를 LLM에 올리면 글자와 함께 페이지마다 이미지가 들어간다. 이 도구로 만든 마크다운은 그보다 몇 배 작고, 공부에 필요한 내용은 남긴다.
+PDF를 LLM에 올리면 글자와 함께 페이지마다 이미지가 들어간다. 마크다운은 그보다 몇 배 작고, 공부에 필요한 내용은 남긴다. 변환할 때마다 이런 추정치가 출력된다.
 
-| 문서 | PDF (대략 토큰) | 마크다운만 | 마크다운 + 그림 전부 |
+| 문서 | PDF | 마크다운 | + 그림 |
 |---|---|---|---|
-| 논문 26쪽 | 5~6만 | 1.5만 | 1.8만 |
-| 강의자료 39쪽 | 6~7만 | 8천 | 2.5만 |
+| 논문 26쪽 | ~53,900토큰 | ~14,600 | ~3,300 |
+| 강의자료 39쪽 | ~116,400토큰 | ~6,700 | ~18,300 |
 
 ## 기능
 
 - 수식과 코드는 그림으로 잘라낸다. 인식 오류로 내용이 깨지지 않는다.
 - 여러 페이지에 반복되는 로고와 장식은 지운다.
 - 참고문헌 절은 지운다.
-- 슬라이드는 페이지마다 첫 줄에 `[p.N]`을 붙인다.
+- 슬라이드는 페이지마다 `[p.N]`을 붙인다.
 - 그림 이름은 페이지 기준이다: `p04_1.png`, `p05_eq1.png`, `p30_code1.png`.
 
-## 설치
+## 시작하기
 
-[uv](https://docs.astral.sh/uv/)가 필요하다.
+[uv](https://docs.astral.sh/uv/)가 설치돼 있다면:
 
 ```bash
 uv tool install git+https://github.com/InHyunseo/pdf2md-study
-```
-
-첫 변환 때 Docling 모델을 내려받느라 몇 분 걸린다.
-
-## 사용법
-
-```bash
 pdf2md-study paper.pdf
 ```
 
 PDF 옆에 `paper.md`와 `paper_artifacts/`가 생긴다.
 
-| 옵션 | 효과 |
-|---|---|
-| `-o DIR` | 결과를 `DIR`에 저장 |
-| `--pages` | 페이지 전체 그림도 저장 |
-| `--latex` | 수식을 그림 대신 LaTeX 글자로 인식 |
-| `--keep-refs` | 참고문헌 유지 |
-| `--ocr` | 이미지 속 글자도 읽음 (스캔본) |
-
-자세한 내용은 [docs/usage.ko.md](docs/usage.ko.md).
+- [빠른 시작](docs/quickstart.ko.md): Ubuntu, WSL2, macOS, Windows 단계별 설치
+- [사용법](docs/usage.ko.md): 옵션, 결과물, LLM에 보낼 때 팁
 
 ## 개발
 
@@ -62,6 +48,8 @@ uv sync
 uv run pytest
 uv run ruff check
 ```
+
+PR마다 Ubuntu, Windows, macOS에서 lint와 테스트가 돈다.
 
 ## 라이선스
 
