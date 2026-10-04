@@ -1825,19 +1825,25 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "docling" },
+    { name = "docling-core" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "docling-core" },
     { name = "pytest" },
     { name = "ruff" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "docling", specifier = ">=2.133.0" }]
+requires-dist = [
+    { name = "docling", specifier = ">=2.133.0" },
+    { name = "docling-core", specifier = ">=2.99.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "docling-core", specifier = ">=2.99.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.16.10" },
 ]

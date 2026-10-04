@@ -1,0 +1,48 @@
+# Lint once, then test on every OS and on the oldest and newest supported Python.
+# Installs only the dev group (docling-core, pytest, ruff), not docling and PyTorch.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0
+
+      - name: Install dev dependencies
+        run: uv sync --locked --only-group dev
+
+      - name: Lint
+        run: uv run --no-sync ruff check
+
+      - name: Check format
+        run: uv run --no-sync ruff format --check
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dev dependencies
+        run: uv sync --locked --only-group dev
+
+      - name: Test
+        run: uv run --no-sync pytest
