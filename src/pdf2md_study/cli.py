@@ -72,3 +72,8 @@ def main(argv: list[str] | None = None) -> None:
         + ", ".join(details)
     )
     print(f"  about {result.character_count:,} characters")
+    print(
+        f"  estimated tokens: PDF ~{round(result.pdf_tokens, -2):,}"
+        f" -> Markdown ~{round(result.markdown_tokens, -2):,}"
+        f" (+ images ~{round(result.image_tokens, -2):,})"
+    )
