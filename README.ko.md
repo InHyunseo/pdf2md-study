@@ -30,7 +30,7 @@ PDF를 LLM에 올리면 글자와 함께 페이지마다 이미지가 들어간�
 [uv](https://docs.astral.sh/uv/)가 설치돼 있다면:
 
 ```bash
-uv tool install git+https://github.com/InHyunseo/pdf2md-study
+uv tool install pdf2md-study
 pdf2md-study paper.pdf
 ```
 

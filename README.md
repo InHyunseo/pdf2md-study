@@ -30,7 +30,7 @@ Uploading a PDF to an LLM sends the text and an image of every page. The Markdow
 With [uv](https://docs.astral.sh/uv/) installed:
 
 ```bash
-uv tool install git+https://github.com/InHyunseo/pdf2md-study
+uv tool install pdf2md-study
 pdf2md-study paper.pdf
 ```
 
