@@ -15,11 +15,13 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import (
+    ContentLayer,
     DocItemLabel,
     DoclingDocument,
     ImageRefMode,
     PictureItem,
 )
+from PIL import Image
 
 from pdf2md_study.layout import (
     BODY,
@@ -35,6 +37,7 @@ from pdf2md_study.markdown import (
     replace_regions,
     strip_references,
 )
+from pdf2md_study.tokens import image_tokens, page_image_tokens, text_tokens
 
 IMAGE_SCALE = 2.0  # resolution multiplier for cropped images
 
@@ -52,6 +55,9 @@ class ConversionResult:
     code_count: int
     page_image_count: int
     character_count: int
+    pdf_tokens: int
+    markdown_tokens: int
+    image_tokens: int
 
 
 def build_converter(ocr: bool, latex: bool) -> DocumentConverter:
@@ -128,6 +134,25 @@ def save_pages(document: DoclingDocument, artifact_dir: Path, namer: ImageNamer)
     return count
 
 
+def estimate_pdf_tokens(document: DoclingDocument) -> int:
+    """Estimated tokens of the PDF: all text plus one image per page."""
+    text = document.export_to_text(included_content_layers=set(ContentLayer))
+    pages = sum(
+        page_image_tokens(page.size.width, page.size.height)
+        for page in document.pages.values()
+    )
+    return text_tokens(text) + pages
+
+
+def saved_image_tokens(artifact_dir: Path) -> int:
+    """Estimated tokens of the pictures, equations, and code images in artifact_dir."""
+    total = 0
+    for path in artifact_dir.glob("*.png"):
+        with Image.open(path) as image:
+            total += image_tokens(*image.size)
+    return total
+
+
 def clear_images(artifact_dir: Path) -> None:
     """Delete images left from a previous conversion."""
     for path in [*artifact_dir.glob("*.png"), *artifact_dir.glob("pages/*.png")]:
@@ -151,6 +176,7 @@ def convert_pdf(
 
     document = build_converter(ocr=ocr, latex=latex).convert(pdf_path).document
     namer = ImageNamer(len(document.pages))
+    pdf_tokens = estimate_pdf_tokens(document)
 
     decoration_count = hide_decorations(document)
     labels = {DocItemLabel.CODE: ("code", "code")}
@@ -186,4 +212,7 @@ def convert_pdf(
         code_count=region_counts["code"],
         page_image_count=page_image_count,
         character_count=len(markdown),
+        pdf_tokens=pdf_tokens,
+        markdown_tokens=text_tokens(markdown),
+        image_tokens=saved_image_tokens(artifact_dir),
     )
