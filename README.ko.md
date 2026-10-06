@@ -34,6 +34,12 @@ uv tool install pdf2md-study
 pdf2md-study paper.pdf
 ```
 
+또는 [Docker](https://docs.docker.com/get-started/get-docker/)로 (Docling 모델 포함):
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
 PDF 옆에 `paper.md`와 `paper_artifacts/`가 생긴다.
 
 - [빠른 시작](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/quickstart.ko.md): Ubuntu, WSL2, macOS, Windows 단계별 설치

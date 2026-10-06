@@ -84,4 +84,39 @@ tomd "C:\Users\me\Desktop\paper.pdf"
 uv tool upgrade pdf2md-study
 ```
 
+## uv 대신 Docker
+
+[Docker](https://docs.docker.com/get-started/get-docker/)가 있다면 1~4단계를 건너뛸 수 있다. 이미지에 Docling 모델이 들어 있고 CPU로 돈다. 첫 실행 때 약 2GB를 내려받는다 (디스크 3.4GB). 이미지는 x86-64용이라 Apple Silicon Mac에서는 에뮬레이션으로 느리게 돈다. 거기서는 uv를 쓴다.
+
+PDF가 있는 폴더에서 실행한다.
+
+**Ubuntu / WSL2 / macOS**
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
+**Windows (PowerShell)**
+
+```powershell
+docker run --rm -v "${PWD}:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
+- `-v`는 현재 폴더를 컨테이너의 `/data`로 공유한다. PDF는 이 폴더나 그 아래에 있어야 하고, 경로는 이 폴더 기준이다. `-o out`은 `./out`에 쓴다.
+- `--user`는 결과 파일의 소유자를 나로 만든다. 없으면 Linux와 WSL2에서 root 소유가 된다.
+- 옵션은 `pdf2md-study`와 같이 파일 이름 뒤에 붙인다.
+
+WSL2에서는 Windows 폴더로 먼저 이동한다.
+
+```bash
+cd "$(wslpath 'C:\Users\me\Desktop')"
+```
+
+업데이트하거나 버전을 고정하려면:
+
+```bash
+docker pull ghcr.io/inhyunseo/pdf2md-study
+docker run ... ghcr.io/inhyunseo/pdf2md-study:0.2.0 paper.pdf
+```
+
 다음: 모든 옵션은 [사용법](usage.ko.md).

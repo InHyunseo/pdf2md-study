@@ -84,4 +84,39 @@ tomd "C:\Users\me\Desktop\paper.pdf"
 uv tool upgrade pdf2md-study
 ```
 
+## Docker instead of uv
+
+If you have [Docker](https://docs.docker.com/get-started/get-docker/), you can skip steps 1–4. The image includes Docling's models and runs on the CPU. The first run downloads about 2 GB (3.4 GB on disk). The image is built for x86-64, so on Apple Silicon Macs it runs slowly under emulation; use uv there.
+
+Run it in the folder that has the PDF.
+
+**Ubuntu / WSL2 / macOS**
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
+**Windows (PowerShell)**
+
+```powershell
+docker run --rm -v "${PWD}:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
+- `-v` shares the current folder with the container as `/data`. The PDF must be in this folder or below it, and paths are relative to it. `-o out` writes to `./out`.
+- `--user` makes you the owner of the output files. Without it, they belong to root on Linux and WSL2.
+- Options go after the file name, as with `pdf2md-study`.
+
+In WSL2, move to the Windows folder first:
+
+```bash
+cd "$(wslpath 'C:\Users\me\Desktop')"
+```
+
+To update, or to use a fixed version:
+
+```bash
+docker pull ghcr.io/inhyunseo/pdf2md-study
+docker run ... ghcr.io/inhyunseo/pdf2md-study:0.2.0 paper.pdf
+```
+
 Next: [usage](usage.md) for all options.
