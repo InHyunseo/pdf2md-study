@@ -34,6 +34,12 @@ uv tool install pdf2md-study
 pdf2md-study paper.pdf
 ```
 
+Or with [Docker](https://docs.docker.com/get-started/get-docker/), with Docling's models included:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/data" ghcr.io/inhyunseo/pdf2md-study paper.pdf
+```
+
 `paper.md` and `paper_artifacts/` appear next to the PDF.
 
 - [Quickstart](https://github.com/InHyunseo/pdf2md-study/blob/main/docs/quickstart.md): step by step on Ubuntu, WSL2, macOS, and Windows
