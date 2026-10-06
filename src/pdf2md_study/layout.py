@@ -2,11 +2,14 @@
 
 Input: DoclingDocument produced by Docling.
 Output: the same document modified in place (repeated decorations moved out of the body,
-page labels added to slides), and short image file names based on page numbers.
+page labels added to slides), equation boxes grown to their full height,
+and short image file names based on page numbers.
 """
 
 from docling_core.types.doc import (
+    BoundingBox,
     ContentLayer,
+    CoordOrigin,
     DocItem,
     DocItemLabel,
     DoclingDocument,
@@ -21,6 +24,11 @@ SMALL_AREA = 0.02
 MINIMUM_REPEAT = 3
 # Position difference, relative to page size, still treated as the same position.
 POSITION_TOLERANCE = 0.02
+# Docling often gives an equation the height of one text line, cutting off big operators,
+# fractions, and further lines. Grow it toward the items above and below, keeping
+# EQUATION_GAP points clear of their descenders, by at most EQUATION_GROWTH box heights.
+EQUATION_GAP = 2.0
+EQUATION_GROWTH = 3.0
 
 
 def page_box(
@@ -67,6 +75,38 @@ def hide_decorations(document: DoclingDocument) -> int:
                 item.content_layer = ContentLayer.FURNITURE
             hidden += len(items)
     return hidden
+
+
+def equation_box(document: DoclingDocument, item: DocItem) -> BoundingBox:
+    """Box of an equation grown up and down to the neighbouring items.
+
+    Returns a top-left origin box in points. Items beside it (another column) are ignored.
+    """
+    provenance = item.prov[0]
+    page_height = document.pages[provenance.page_no].size.height
+    box = provenance.bbox.to_top_left_origin(page_height)
+    growth = EQUATION_GROWTH * (box.b - box.t)
+    top, bottom = box.t - growth, box.b + growth
+    for other, _ in document.iterate_items(included_content_layers=set(ContentLayer)):
+        if other is item:
+            continue
+        for other_provenance in other.prov:
+            if other_provenance.page_no != provenance.page_no:
+                continue
+            neighbour = other_provenance.bbox.to_top_left_origin(page_height)
+            if neighbour.r <= box.l or neighbour.l >= box.r:
+                continue
+            if neighbour.b <= box.t + 1:
+                top = max(top, neighbour.b + EQUATION_GAP)
+            elif neighbour.t >= box.b - 1:
+                bottom = min(bottom, neighbour.t - EQUATION_GAP)
+    return BoundingBox(
+        l=box.l,
+        t=max(min(top, box.t), 0),
+        r=box.r,
+        b=min(max(bottom, box.b), page_height),
+        coord_origin=CoordOrigin.TOPLEFT,
+    )
 
 
 def is_slides(document: DoclingDocument) -> bool:

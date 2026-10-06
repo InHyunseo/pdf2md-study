@@ -13,7 +13,13 @@ from docling_core.types.doc import (
     Size,
 )
 
-from pdf2md_study.layout import ImageNamer, hide_decorations, is_slides, mark_pages
+from pdf2md_study.layout import (
+    ImageNamer,
+    equation_box,
+    hide_decorations,
+    is_slides,
+    mark_pages,
+)
 
 PORTRAIT = Size(width=600, height=800)
 LANDSCAPE = Size(width=800, height=600)
@@ -116,6 +122,53 @@ def test_mark_pages_skips_code():
     )
     mark_pages(document)
     assert (code.text, text.text) == ("x = 1", "[p.1] Body")
+
+
+def add_line(document: DoclingDocument, top: float, bottom: float, left=50, right=300):
+    """Text item spanning the given vertical range on page 1."""
+    return document.add_text(
+        label=DocItemLabel.TEXT,
+        text="text",
+        prov=provenance(1, left, top, right, bottom),
+    )
+
+
+def box_range(document: DoclingDocument, equation) -> tuple[float, float]:
+    """Top and bottom of the grown equation box."""
+    box = equation_box(document, equation)
+    return box.t, box.b
+
+
+def test_equation_box_grows_to_neighbours():
+    """The box grows up and down to EQUATION_GAP points before the next items."""
+    document = make_document(1)
+    add_line(document, 100, 110)
+    equation = document.add_formula(text="x", prov=provenance(1, 50, 130, 300, 139))
+    add_line(document, 160, 170)
+    assert box_range(document, equation) == (112, 158)
+
+
+def test_equation_box_growth_is_limited():
+    """Without neighbours the box grows by EQUATION_GROWTH heights each way."""
+    document = make_document(1)
+    equation = document.add_formula(text="x", prov=provenance(1, 50, 300, 300, 310))
+    assert box_range(document, equation) == (270, 340)
+
+
+def test_equation_box_ignores_other_column():
+    """Items beside the equation do not limit it."""
+    document = make_document(1)
+    add_line(document, 290, 299, left=320, right=550)
+    equation = document.add_formula(text="x", prov=provenance(1, 50, 300, 300, 310))
+    assert box_range(document, equation) == (270, 340)
+
+
+def test_equation_box_never_shrinks():
+    """A neighbour touching the box leaves the original edge."""
+    document = make_document(1)
+    add_line(document, 290, 300)
+    equation = document.add_formula(text="x", prov=provenance(1, 50, 300, 300, 310))
+    assert box_range(document, equation) == (300, 340)
 
 
 def test_image_namer_counts_per_page_and_kind():
