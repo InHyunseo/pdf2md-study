@@ -16,16 +16,18 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import (
     ContentLayer,
+    DocItem,
     DocItemLabel,
     DoclingDocument,
     ImageRefMode,
     PictureItem,
 )
-from PIL import Image
+from PIL import Image, ImageOps
 
 from pdf2md_study.layout import (
     BODY,
     ImageNamer,
+    equation_box,
     hide_decorations,
     is_slides,
     mark_pages,
@@ -40,6 +42,9 @@ from pdf2md_study.markdown import (
 from pdf2md_study.tokens import image_tokens, page_image_tokens, text_tokens
 
 IMAGE_SCALE = 2.0  # resolution multiplier for cropped images
+INK_LEVEL = 215  # gray pixels darker than this are ink in equation images
+INK_MARGIN = 3.0  # white margin in points around an equation image
+INK_BREAK = 5.0  # blank height in points that ends an equation (e.g. a footnote rule)
 
 
 @dataclass
@@ -77,6 +82,61 @@ def build_converter(ocr: bool, latex: bool) -> DocumentConverter:
     )
 
 
+def ink_band(rows: list[bool], start: int, end: int, gap: int) -> tuple[int, int]:
+    """First and last row of the ink joined to rows[start:end] by blanks shorter than gap."""
+    top, bottom = start, end - 1
+    for step, edge in ((-1, start - 1), (1, end)):
+        blank = 0
+        y = edge
+        while 0 <= y < len(rows) and blank < gap:
+            if rows[y]:
+                blank = 0
+                top, bottom = min(top, y), max(bottom, y)
+            else:
+                blank += 1
+            y += step
+    return top, bottom
+
+
+def equation_image(document: DoclingDocument, item: DocItem) -> Image.Image | None:
+    """Equation cropped from the page image with its full height and an even white margin."""
+    if not item.prov:
+        return None
+    page = document.pages[item.prov[0].page_no]
+    if page.image is None or page.image.pil_image is None:
+        return None
+    image = page.image.pil_image
+    scale = image.width / page.size.width
+    original = item.prov[0].bbox.to_top_left_origin(page.size.height)
+    box = equation_box(document, item)
+    # A little wider than the box, so glyphs on its left and right edges are not cut.
+    region = image.crop(
+        (
+            max(round((box.l - INK_MARGIN) * scale), 0),
+            round(box.t * scale),
+            min(round((box.r + INK_MARGIN) * scale), image.width),
+            round(box.b * scale),
+        )
+    )
+    mask = region.convert("L").point(lambda v: 255 if v < INK_LEVEL else 0)
+    rows = [
+        mask.crop((0, y, mask.width, y + 1)).getbbox() is not None
+        for y in range(mask.height)
+    ]
+    top, bottom = ink_band(
+        rows,
+        round((original.t - box.t) * scale),
+        round((original.b - box.t) * scale),
+        round(INK_BREAK * scale),
+    )
+    ink = mask.crop((0, top, mask.width, bottom + 1)).getbbox()
+    if ink is None:
+        return None
+    left, ink_top, right, ink_bottom = ink
+    equation = region.crop((left, top + ink_top, right, top + ink_bottom))
+    return ImageOps.expand(equation, border=round(INK_MARGIN * scale), fill="white")
+
+
 def regions_to_images(
     document: DoclingDocument,
     artifact_dir: Path,
@@ -92,7 +152,10 @@ def regions_to_images(
     for item, _ in document.iterate_items(included_content_layers=BODY):
         if item.label not in labels:
             continue
-        image = item.get_image(document)
+        if item.label == DocItemLabel.FORMULA:
+            image = equation_image(document, item)
+        else:
+            image = item.get_image(document)
         if image is None:
             continue
         kind, alt = labels[item.label]
