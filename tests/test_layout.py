@@ -6,9 +6,9 @@ Output: pass or fail of the layout analysis results.
 
 from docling_core.types.doc import (
     BoundingBox,
-    ContentLayer,
     DocItemLabel,
     DoclingDocument,
+    PictureItem,
     ProvenanceItem,
     Size,
 )
@@ -16,9 +16,10 @@ from docling_core.types.doc import (
 from pdf2md_study.layout import (
     ImageNamer,
     equation_box,
-    hide_decorations,
+    find_decorations,
     is_slides,
     mark_pages,
+    page_box,
 )
 
 PORTRAIT = Size(width=600, height=800)
@@ -44,57 +45,68 @@ def provenance(
     )
 
 
-def test_hide_decorations_repeated_on_every_page():
-    """A picture at the same position on every page is hidden."""
-    document = make_document(4)
-    logos = [
-        document.add_picture(prov=provenance(page_no, 500, 10, 590, 60))
-        for page_no in range(1, 5)
+def decorations(document: DoclingDocument) -> set[int]:
+    """Indices of the decorations among the pictures of the document."""
+    pictures = [
+        page_box(document, item)
+        for item, _ in document.iterate_items()
+        if isinstance(item, PictureItem)
     ]
-    figure = document.add_picture(prov=provenance(2, 50, 200, 550, 600))
-
-    assert hide_decorations(document) == 4
-    assert all(logo.content_layer == ContentLayer.FURNITURE for logo in logos)
-    assert figure.content_layer == ContentLayer.BODY
+    return find_decorations(pictures, len(document.pages))
 
 
-def test_hide_decorations_tolerates_small_shift():
+def test_find_decorations_repeated_on_every_page():
+    """A picture at the same position on every page is a decoration."""
+    document = make_document(4)
+    for page_no in range(1, 5):
+        document.add_picture(prov=provenance(page_no, 500, 10, 590, 60))
+    document.add_picture(prov=provenance(2, 50, 200, 550, 600))
+    assert decorations(document) == {0, 1, 2, 3}
+
+
+def test_find_decorations_skips_pictures_without_position():
+    """A picture without a position is never a decoration."""
+    assert find_decorations([(1, None), (2, None), (3, None)], 3) == set()
+
+
+def test_find_decorations_tolerates_small_shift():
     """Pictures shifted by a few points still count as the same position."""
     document = make_document(3)
     for page_no, shift in zip(range(1, 4), (0, 3, -3)):
         document.add_picture(prov=provenance(page_no, 500 + shift, 10, 590 + shift, 60))
-    assert hide_decorations(document) == 3
+    assert decorations(document) == {0, 1, 2}
 
 
-def test_hide_decorations_small_picture_on_few_pages():
-    """A small picture repeated on 3 of 20 pages is hidden."""
+def test_find_decorations_small_picture_on_few_pages():
+    """A small picture repeated on 3 of 20 pages is a decoration."""
     document = make_document(20)
     for page_no in (1, 5, 9):
         document.add_picture(prov=provenance(page_no, 10, 10, 40, 40))
-    assert hide_decorations(document) == 3
+    assert decorations(document) == {0, 1, 2}
 
 
-def test_hide_decorations_large_picture_on_few_pages():
+def test_find_decorations_large_picture_on_few_pages():
     """A large picture repeated on 3 of 20 pages is kept."""
     document = make_document(20)
     for page_no in (1, 5, 9):
         document.add_picture(prov=provenance(page_no, 50, 200, 550, 600))
-    assert hide_decorations(document) == 0
+    assert decorations(document) == set()
 
 
-def test_hide_decorations_picture_on_two_pages():
+def test_find_decorations_picture_on_two_pages():
     """A picture repeated on only 2 pages is kept."""
     document = make_document(2)
     for page_no in (1, 2):
         document.add_picture(prov=provenance(page_no, 10, 10, 40, 40))
-    assert hide_decorations(document) == 0
+    assert decorations(document) == set()
 
 
 def test_is_slides():
     """Documents with mostly landscape pages are slides."""
-    assert is_slides(make_document(3, LANDSCAPE))
-    assert not is_slides(make_document(3, PORTRAIT))
-    assert not is_slides(make_document(0))
+    assert is_slides([LANDSCAPE] * 3)
+    assert not is_slides([PORTRAIT] * 3)
+    assert not is_slides([LANDSCAPE, PORTRAIT])
+    assert not is_slides([])
 
 
 def test_mark_pages_first_text_only():
@@ -173,14 +185,11 @@ def test_equation_box_never_shrinks():
 
 def test_image_namer_counts_per_page_and_kind():
     """Numbers restart for each page and each kind."""
-    document = make_document(2)
-    first = document.add_picture(prov=provenance(1, 0, 0, 10, 10))
-    second = document.add_picture(prov=provenance(2, 0, 0, 10, 10))
-    namer = ImageNamer(page_count=2)
-    names = [namer(first), namer(first), namer(first, "eq"), namer(second)]
+    namer = ImageNamer(last_page=2)
+    names = [namer(1), namer(1), namer(1, "eq"), namer(2)]
     assert names == ["p01_1.png", "p01_2.png", "p01_eq1.png", "p02_1.png"]
 
 
-def test_image_namer_pads_to_page_count():
-    """Page numbers are padded to the digits of the page count."""
-    assert ImageNamer(page_count=120).page_name(7) == "p007"
+def test_image_namer_pads_to_last_page():
+    """Page numbers are padded to the digits of the last page number."""
+    assert ImageNamer(last_page=120).page_name(7) == "p007"

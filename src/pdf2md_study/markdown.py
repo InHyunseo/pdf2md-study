@@ -34,7 +34,10 @@ def strip_references(markdown: str) -> str:
 
 
 def fill_pictures(markdown: str, links: list[str | None]) -> str:
-    """Replace picture markers with image links in order. None removes the marker."""
+    """Replace picture markers with image links in order.
+
+    None removes the marker, and the blank line after it when the marker is a paragraph.
+    """
     parts = markdown.split(PICTURE_MARKER)
     if len(parts) - 1 != len(links):
         warnings.warn(
@@ -44,7 +47,10 @@ def fill_pictures(markdown: str, links: list[str | None]) -> str:
     result = [parts[0]]
     for index, part in enumerate(parts[1:]):
         link = links[index] if index < len(links) else None
-        result.append(f"![figure]({link})" if link else "")
+        if link:
+            result.append(f"![figure]({link})")
+        elif part.startswith("\n\n"):
+            part = part[2:]
         result.append(part)
     return "".join(result)
 

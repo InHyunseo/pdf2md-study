@@ -57,6 +57,12 @@ def test_fill_pictures_in_order():
     )
 
 
+def test_fill_pictures_removes_paragraph():
+    """None removes a marker paragraph together with its blank line."""
+    markdown = f"a\n\n{PICTURE_MARKER}\n\nb\n"
+    assert fill_pictures(markdown, [None]) == "a\n\nb\n"
+
+
 def test_fill_pictures_warns_on_count_mismatch():
     """A different number of markers and links raises a warning."""
     with pytest.warns(UserWarning, match="2 picture markers but 1 saved pictures"):

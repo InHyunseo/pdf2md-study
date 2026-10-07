@@ -5,8 +5,17 @@ Output: Markdown and images written by convert_pdf, and a summary on stdout.
 """
 
 import argparse
-import sys
+import logging
+import signal
 from pathlib import Path
+
+from pdf2md_study.pages import parse_page_ranges
+
+
+def stop(signal_number: int, frame: object) -> None:
+    """Ctrl+C handler: turn off logging, so Docling's stopping threads print nothing, and stop."""
+    logging.disable(logging.CRITICAL)
+    raise KeyboardInterrupt
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -33,10 +42,16 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--ocr",
         action="store_true",
-        help="read text inside images, for scanned PDFs (slower)",
+        help="read all page text with OCR, for scans or PDFs with garbled symbols (much slower)",
     )
     parser.add_argument(
         "--pages", action="store_true", help="also save an image of every page"
+    )
+    parser.add_argument(
+        "--page-range",
+        metavar="RANGES",
+        help='pages to convert, such as "3-7, 10, 20-" (default: all); '
+        "write --page-range=-5 when it starts with -",
     )
     arguments = parser.parse_args(argv)
 
@@ -44,8 +59,20 @@ def main(argv: list[str] | None = None) -> None:
     if not pdf_path.is_file():
         parser.error(f"file not found: {pdf_path}")
     output_dir = (arguments.output or pdf_path.parent).resolve()
+    page_ranges = None
+    if arguments.page_range is not None:
+        try:
+            page_ranges = parse_page_ranges(arguments.page_range)
+        except ValueError as error:
+            parser.error(str(error))
 
-    from pdf2md_study.convert import convert_pdf
+    signal.signal(signal.SIGINT, stop)
+    try:
+        from docling.exceptions import ConversionError
+
+        from pdf2md_study.convert import convert_pdf
+    except KeyboardInterrupt:
+        parser.exit(130, f"{parser.prog}: interrupted\n")
 
     try:
         result = convert_pdf(
@@ -55,9 +82,12 @@ def main(argv: list[str] | None = None) -> None:
             keep_references=arguments.keep_references,
             ocr=arguments.ocr,
             page_images=arguments.pages,
+            page_ranges=page_ranges,
         )
+    except ConversionError as error:
+        parser.exit(1, f"{parser.prog}: error: {error}\n")
     except KeyboardInterrupt:
-        sys.exit(130)
+        parser.exit(130, f"{parser.prog}: interrupted\n")
 
     details = [
         f"{result.picture_count} pictures ({result.decoration_count} decorations removed)",

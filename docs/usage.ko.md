@@ -7,7 +7,7 @@
 ## 명령
 
 ```bash
-pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr]
+pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr] [--page-range RANGES]
 ```
 
 | 옵션 | 효과 |
@@ -16,7 +16,8 @@ pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr]
 | `--pages` | 페이지 전체 그림도 `<이름>_artifacts/pages/`에 저장 |
 | `--latex` | 수식을 그림으로 자르지 않고 LaTeX 글자로 인식. 느리고, 복잡한 식은 틀릴 수 있다 |
 | `--keep-refs` | 참고문헌 유지 |
-| `--ocr` | 이미지 속 글자도 읽음. 스캔본용. 느리다 |
+| `--ocr` | PDF 글자 대신 페이지 그림을 OCR로 읽음. 스캔본이나 기호가 다른 글자로 나오는 PDF용 (예: `=`가 `5`로). 그림·수식 그림은 같다. 약 5배 느리다 |
+| `--page-range 범위` | 이 페이지만 변환. 예: `"3-7, 10, 20-"` (`20-`는 20쪽부터 끝까지, `-5`는 1쪽부터 5쪽까지). `-`로 시작하면 `=`로 붙여 쓴다: `--page-range=-5,10`. 그림 이름은 원래 쪽 번호를 따른다. 기본값은 전체 |
 
 ## 결과물
 
