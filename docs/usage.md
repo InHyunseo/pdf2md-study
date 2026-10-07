@@ -7,7 +7,7 @@ For installation, see the [quickstart](quickstart.md).
 ## Command
 
 ```bash
-pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr]
+pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr] [--page-range RANGES]
 ```
 
 | Option | Effect |
@@ -16,7 +16,8 @@ pdf2md-study <pdf> [-o DIR] [--pages] [--latex] [--keep-refs] [--ocr]
 | `--pages` | Also save an image of every page into `<name>_artifacts/pages/` |
 | `--latex` | Recognize equations as LaTeX text instead of cropping them. Slower, and complex equations can come out wrong |
 | `--keep-refs` | Keep the references section |
-| `--ocr` | Read text inside images. For scanned PDFs. Slower |
+| `--ocr` | Read all text from the page images with OCR instead of the PDF text. For scanned PDFs, or PDFs whose symbols come out as wrong characters (e.g. `=` as `5`). Pictures and equation images stay the same. About 5 times slower |
+| `--page-range RANGES` | Convert only these pages, such as `"3-7, 10, 20-"` (`20-` is page 20 to the end, `-5` is pages 1 to 5). When it starts with `-`, join it with `=`: `--page-range=-5,10`. Image names keep the original page numbers. Default: all pages |
 
 ## Output
 
